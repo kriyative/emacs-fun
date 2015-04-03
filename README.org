@@ -1,0 +1,5 @@
+#+TITLE: README for emacs-fun
+
+emacs-fun -- A bunch useful (to a few of us) Emacs functions, macros
+and commands.  Documentation is sparse at present, but we hope to fix
+that over time.
