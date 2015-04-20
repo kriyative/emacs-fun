@@ -52,4 +52,21 @@ is invoked on the remote server."
                    (buffer-list)))
     (kill-buffer buffer)))
 
+(defun run (command)
+  "Spawn a long running process in a buffer named *run:
+command+args* and swtich to it."
+  (interactive "sRun program: ")
+  (destructuring-bind (program &rest args)
+      (split-string command " ")
+    (let* ((buf-name (concat "*run:" command "*"))
+           (buf-proc (get-buffer-process buf-name)))
+      (if buf-proc
+          (message "Process is already running.")
+        (let ((buf (get-buffer buf-name)))
+          (when buf (kill-buffer buf))
+          (let ((name (file-name-nondirectory program))
+                (buf (get-buffer-create buf-name)))
+            (switch-to-buffer (apply 'make-comint-in-buffer name buf program nil args))
+            (run-hooks (intern-soft (concat "comint-" name "-hook")))))))))
+
 (provide 'efun-cmds)
