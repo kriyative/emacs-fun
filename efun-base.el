@@ -23,7 +23,7 @@
 (defun join (sep list)
   "Concatenate LIST of strings into a string separated by SEP. e.g,
 
-  (join "," '(\"foo\" \"bar\"))
+  (join \",\" '(\"foo\" \"bar\"))
   => \"foo,bar\""
   (mapconcat 'identity list sep))
 
