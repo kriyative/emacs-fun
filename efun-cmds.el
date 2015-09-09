@@ -69,4 +69,11 @@ command+args* and swtich to it."
             (switch-to-buffer (apply 'make-comint-in-buffer name buf program nil args))
             (run-hooks (intern-soft (concat "comint-" name "-hook")))))))))
 
+(defun python-webserver (&optional port)
+  (interactive "sPort (8000): ")
+  (let ((port (or (when (not (zerop (length port)))
+                    (string-to-int port))
+                  8000)))
+    (run (format "python -m SimpleHTTPServer %d" port))))
+
 (provide 'efun-cmds)
