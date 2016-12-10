@@ -47,9 +47,13 @@ is invoked on the remote server."
 (defun kill-buffers-matching (pattern)
   "Kill all buffers matching specified regexp"
   (interactive "sRegexp: ")
-  (dolist (buffer (remove-if-not
-                   (lambda (x) (string-match pattern (buffer-name x)))
-                   (buffer-list)))
+  (dolist (buffer (remove-if-not (lambda (x)
+                                   (let ((fname (or (buffer-file-name x)
+                                                    (with-current-buffer x
+                                                      (ibuffer-buffer-file-name)))))
+                                     (when fname
+                                       (string-match pattern fname))))
+                                 (buffer-list)))
     (kill-buffer buffer)))
 
 (defun run (command)
