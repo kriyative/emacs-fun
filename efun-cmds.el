@@ -80,4 +80,31 @@ command+args* and swtich to it."
                   8000)))
     (run (format "python -m SimpleHTTPServer %d" port))))
 
+(defvar *find-function-stack* nil)
+
+(defun find-function-do-it-around (orig-fun symbol type switch-fn)
+  (let ((marker (point-marker))
+        (res (funcall orig-fun symbol type switch-fn)))
+    (unless (equal marker (point-marker))
+      (push marker *find-function-stack*))
+    res))
+
+(advice-add 'find-function-do-it :around #'find-function-do-it-around)
+
+(defun pop-find-function ()
+  (interactive)
+  (let ((marker (pop *find-function-stack*)))
+    (if marker
+        (let ((buf (marker-buffer marker))
+              (point (marker-position marker)))
+          (if (buffer-live-p buf)
+              (progn
+                (unless (equal buf (current-buffer))
+                  (switch-to-buffer buf))
+                (goto-char point))
+            (message "Buffer for previous location is unavailable" buf)))
+      (message "No previous location"))))
+
+(define-key emacs-lisp-mode-map "\M-," 'pop-find-function)
+
 (provide 'efun-cmds)
