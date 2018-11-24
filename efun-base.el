@@ -50,7 +50,7 @@ for declaring it as ignorable.
 
 This is a more limited and lightweight implementation of some ideas from
 metabang-bind (http://common-lisp.net/project/metabang-bind/)."
-  (labels
+  (cl-labels
       ((parse-arglist (args)
          (loop
             for arg in args
