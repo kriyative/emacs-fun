@@ -2,11 +2,13 @@
 
 (require 'efun-base)
 
+(defvar *x-find-file-fallback* 'find-file)
+
 (defun sudo-find-file (file-name)
   "Like find file, but opens the file as root."
   (interactive "FSudo Find File: ")
   (let ((tramp-file-name (concat "/sudo::" (expand-file-name file-name))))
-    (find-file tramp-file-name)))
+    (funcall (or *x-find-file-fallback* 'find-file) tramp-file-name)))
 
 (defun x-find-file (&optional arg)
   "Extend find-file to invoke sudo-find-file if prefix arg is
@@ -19,7 +21,7 @@ provided. Bind it to \"\C-x\C-f\" to override the built-in
   (call-interactively
    (if (and arg (< 1 arg))
        'sudo-find-file
-     'find-file)))
+     (or *x-find-file-fallback* 'find-file))))
 
 (defun tail-f (file)
   "Create a COMINT mode buffer running the `tail -f` command on
