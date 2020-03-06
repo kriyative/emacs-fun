@@ -109,4 +109,39 @@ command+args* and swtich to it."
 
 (define-key emacs-lisp-mode-map "\M-," 'pop-find-function)
 
+(defun exec! (command)
+  "Run COMMAND in a sub-process and wait for it to complete, log
+output to the *Console* buffer."
+  (interactive (list (read-shell-command "$ ")))
+  (let* ((program-and-args (if (stringp command)
+                               (split-string command)
+                             command))
+         (program (car program-and-args))
+         (args (cdr program-and-args))
+         (console (get-buffer-create "*Console*"))
+         (pt (with-current-buffer console
+               (goto-char (point-max))
+               (insert "$ "
+                       (mapconcat 'identity program-and-args " ")
+                       "\n")
+               (point)))
+         (ret (apply 'call-process program nil console t args))
+         (out (with-current-buffer console
+                (buffer-substring-no-properties pt (point)))))
+    (if (and (numberp ret) (= 0 ret))
+        out
+      (throw 'exec!-error (list ret out)))))
+
+(defun spawn& (command)
+  "Spawn COMMAND as a separate process."
+  (interactive (list (read-shell-command "$ ")))
+  (let* ((program-and-args (if (stringp command)
+                               (split-string command)
+                             command))
+         (program (car program-and-args))
+         (program-name (file-name-nondirectory program))
+         (program-buffer (concat " *" program-name))
+         (args (cdr program-and-args)))
+    (apply 'start-process program-name program-buffer program args)))
+
 (provide 'efun-cmds)
