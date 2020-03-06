@@ -114,4 +114,89 @@ VARS values."
       (require feature)
     (error (message "Error loading feature %s" feature))))
 
+(defmacro if-bind (binding then &optional else)
+  "Yet another implementation of IF form, which binds result of
+the predicate in the scope of the THEN form, e.g.,
+
+  (if-bind (existsp (file-exists-p \"/tmp/dummy\"))
+    (message \"does the file exist? %s\" existsp)
+    (message \"no joy\"))"
+  (declare (indent 1))
+  (destructuring-bind (var predicate)
+      binding
+    `(let ((,var ,predicate))
+       (if ,var
+           ,then
+         ,else))))
+
+(defmacro when-bind (binding &rest body)
+  "Yet another implementation of WHEN form, which binds result of
+the predicate in the scope of the BODY form, e.g.,
+
+  (when-bind (existsp (file-exists-p \"/tmp/dummy\"))
+    (message \"does the file exist? %s\" existsp))"
+  (declare (indent 1))
+  `(if-bind ,binding
+     (progn
+       ,@body)))
+
+(defun locate-path (file path-list)
+  "Searches for specified file in PATH-LIST, returns full
+pathname if found."
+  (cl-labels ((concat-path (path file)
+                           (concat (file-name-as-directory path) file)))
+    (when-bind (path (find-if (lambda (path)
+                                (let ((file-path (concat-path path file)))
+                                  (and (file-exists-p file-path) file-path)))
+                              path-list))
+      (concat-path path file))))
+
+(defun re-matches (re str)
+  "Return a list of matched substrings of RE in STR."
+  (when (string-match re str)
+    (mapcar (lambda (match)
+              (apply 'substring str match))
+            (partition (match-data) 2))))
+
+(defun html (spec)
+  "Generate a string representation of the specified HTML spec."
+  (labels ((spaced (seq) (join " " seq))
+           (attr-str (attrs)
+             (spaced (mapcar (lambda (x)
+                               (destructuring-bind (key val) x
+                                 (concat (str key) "=\"" (str val) "\"")))
+                             (partition attrs 2))))
+           (seq (x)
+             (if (listp x) x (list x))))
+    (if (listp spec)
+        (let ((head (first spec)))
+          (destructuring-bind (tag &rest attribs) (seq head)
+            (join ""
+                  (append
+                   (list*
+                    (concat "<" (str tag)
+                            (if (zerop (length attribs))
+                                ""
+                                (concat " " (attr-str attribs)))
+                            ">")
+                    (mapcar 'html (rest spec)))
+                   (list (concat "</" (str tag) ">"))))))
+      spec)))
+
+;;; https://www.emacswiki.org/emacs/AddCommasToNumbers
+(defun add-number-grouping (number &optional separator)
+  "Add commas to NUMBER and return it as a string. Optional
+SEPARATOR is the string to use to separate groups. It defaults to
+a comma."
+  (when number
+    (let ((num (if (stringp number)
+                   number
+                 (number-to-string number)))
+          (op (or separator ",")))
+      (while (string-match "\\(.*[0-9]\\)\\([0-9][0-9][0-9].*\\)" num)
+        (setq num (concat
+                   (match-string 1 num) op
+                   (match-string 2 num))))
+      num)))
+
 (provide 'efun-base)
