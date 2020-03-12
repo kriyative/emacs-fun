@@ -91,7 +91,8 @@ command+args* and swtich to it."
       (push marker *find-function-stack*))
     res))
 
-(advice-add 'find-function-do-it :around #'find-function-do-it-around)
+(when (fboundp 'advice-add)
+  (advice-add 'find-function-do-it :around #'find-function-do-it-around))
 
 (defun pop-find-function ()
   (interactive)
