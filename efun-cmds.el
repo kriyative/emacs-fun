@@ -49,16 +49,17 @@ is invoked on the remote server."
 (defun kill-buffers-matching (pattern)
   "Kill all buffers matching specified regexp"
   (interactive "sRegexp: ")
-  (dolist (buffer (remove-if-not (lambda (x)
-                                   (let ((fname (or (buffer-file-name x)
-                                                    (with-current-buffer x
-                                                      (ibuffer-buffer-file-name)))))
-                                     (when fname
-                                       (string-match pattern fname))))
-                                 (buffer-list)))
+  (dolist (buffer (cl-remove-if-not
+                   (lambda (x)
+                     (let ((fname (or (buffer-file-name x)
+                                      (with-current-buffer x
+                                        (ibuffer-buffer-file-name)))))
+                       (when fname
+                         (string-match pattern fname))))
+                   (buffer-list)))
     (kill-buffer buffer)))
 
-(defun run (command)
+(cl-defun run (command &key hide-buffer)
   "Spawn a long running process in a buffer named *run:
 command+args* and swtich to it."
   (interactive "sRun program: ")
@@ -70,9 +71,16 @@ command+args* and swtich to it."
           (message "Process is already running.")
         (let ((buf (get-buffer buf-name)))
           (when buf (kill-buffer buf))
-          (let ((name (file-name-nondirectory program))
-                (buf (get-buffer-create buf-name)))
-            (switch-to-buffer (apply 'make-comint-in-buffer name buf program nil args))
+          (let* ((name (file-name-nondirectory program))
+                 (buf (get-buffer-create buf-name))
+                 (proc-buf (apply 'make-comint-in-buffer
+                                  name
+                                  buf
+                                  program
+                                  nil
+                                  args)))
+            (unless hide-buffer
+              (switch-to-buffer proc-buf))
             (run-hooks (intern-soft (concat "comint-" name "-hook")))))))))
 
 (defun python-webserver (&optional port)
