@@ -86,9 +86,9 @@ command+args* and swtich to it."
 (defun python-webserver (&optional port)
   (interactive "sPort (8000): ")
   (let ((port (or (when (not (zerop (length port)))
-                    (string-to-int port))
+                    (string-to-number port))
                   8000)))
-    (run (format "python -m SimpleHTTPServer %d" port))))
+    (run (format "python3 -m http.server %d" port))))
 
 (defvar *find-function-stack* nil)
 
@@ -113,7 +113,7 @@ command+args* and swtich to it."
                 (unless (equal buf (current-buffer))
                   (switch-to-buffer buf))
                 (goto-char point))
-            (message "Buffer for previous location is unavailable" buf)))
+            (message "Buffer for previous location is unavailable")))
       (message "No previous location"))))
 
 (define-key emacs-lisp-mode-map "\M-," 'pop-find-function)
