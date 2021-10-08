@@ -17,7 +17,7 @@
   (partition '(1 2 3 4 5) 2)
   => '((1 2) (3 4) (5 nil))"
   (do ((list list (nthcdr len list))
-       (result nil (cons (subseq list 0 len) result)))
+       (result nil (cons (cl-subseq list 0 len) result)))
       ((null list) (reverse result))))
 
 (defun join (sep list)
@@ -30,7 +30,7 @@
 (defun str (x)
   "Return the string form of X"
   (etypecase x
-    (symbol (subseq (symbol-name x) (if (keywordp x) 1 0)))
+    (symbol (cl-subseq (symbol-name x) (if (keywordp x) 1 0)))
     (string x)
     (t (prin1-to-string x))))
 
@@ -145,10 +145,10 @@ the predicate in the scope of the BODY form, e.g.,
 pathname if found."
   (cl-labels ((concat-path (path file)
                            (concat (file-name-as-directory path) file)))
-    (when-bind (path (find-if (lambda (path)
-                                (let ((file-path (concat-path path file)))
-                                  (and (file-exists-p file-path) file-path)))
-                              path-list))
+    (when-bind (path (cl-find-if (lambda (path)
+                                   (let ((file-path (concat-path path file)))
+                                     (and (file-exists-p file-path) file-path)))
+                                 path-list))
       (concat-path path file))))
 
 (defun re-matches (re str)
@@ -160,14 +160,17 @@ pathname if found."
 
 (defun html (spec)
   "Generate a string representation of the specified HTML spec."
-  (labels ((spaced (seq) (join " " seq))
-           (attr-str (attrs)
-             (spaced (mapcar (lambda (x)
-                               (destructuring-bind (key val) x
-                                 (concat (str key) "=\"" (str val) "\"")))
-                             (partition attrs 2))))
-           (seq (x)
-             (if (listp x) x (list x))))
+  (cl-labels ((spaced (seq) (join " " seq))
+              (attr-str (attrs)
+                        (spaced (mapcar (lambda (x)
+                                          (destructuring-bind (key val) x
+                                            (concat (str key)
+                                                    "=\""
+                                                    (str val)
+                                                    "\"")))
+                                        (partition attrs 2))))
+              (seq (x)
+                   (if (listp x) x (list x))))
     (if (listp spec)
         (let ((head (first spec)))
           (destructuring-bind (tag &rest attribs) (seq head)
