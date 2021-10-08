@@ -180,7 +180,7 @@ pathname if found."
                     (concat "<" (str tag)
                             (if (zerop (length attribs))
                                 ""
-                                (concat " " (attr-str attribs)))
+                              (concat " " (attr-str attribs)))
                             ">")
                     (mapcar 'html (rest spec)))
                    (list (concat "</" (str tag) ">"))))))
